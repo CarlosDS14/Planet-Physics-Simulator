@@ -1,0 +1,11 @@
+.vscode/
+src/old/
+saves/
+asset/
+SDL2/
+*.dll
+*.sav
+*.txt
+*.exe
+*.bat
+SaveExample.c
