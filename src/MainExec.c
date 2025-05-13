@@ -1,4 +1,5 @@
 // For loading with saves, compile with parameter = -D SAVE_LOADER
+// For checking data, compile with parameter = -D BODY_CHECKER
 #define SDL_MAIN_HANDLED
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,26 +60,28 @@ int main(int argc, char** argv)
 
     if (load_custom_save == false) default_bodies(BodysLoaded);
 
-    // #ifdef SAVE_LOADER
-    // u8 objectCountInScenario;
-    // for (int i = 0; i < MAXBODYSINSCENARIO; i++)
-    // {
-    //     if (BodysLoaded[i] == NULL)
-    //     printf("X: %.1f\n", BodysLoaded[i]->x);
-    //     printf("Y: %.1f\n", BodysLoaded[i]->y);
-    //     printf("X vel: %.1f\n", BodysLoaded[i]->vx);
-    //     printf("Y vel: %.1f\n", BodysLoaded[i]->vy);
-    //     printf("Radius: %.1f\n", BodysLoaded[i]->radius);
-    //     printf("Mass: %.1f\n", BodysLoaded[i]->mass);
-    //     printf("Red: %d\n", (int)BodysLoaded[i]->ColorRed);
-    //     printf("Green: %d\n", (int)BodysLoaded[i]->ColorGreen);
-    //     printf("Blue: %d\n",(int) BodysLoaded[i]->ColorBlue);
-    //     printf("Alpha: %d\n", (int)BodysLoaded[i]->AlphaChannel);
-    //     printf("Bitfield settings: %d\n", (int)BodysLoaded[i]->Bitfield);
-    //     objectCountInScenario++;
-    // }
-    // printf("object count: %d\n", objectCountInScenario);
-    // #endif
+    // FIXME: This crashes the program, idk why, but im looking how to fix it
+    // UPDATE: Problem solved, segfault because of the if statement not having the "continue" keyword
+    #ifdef BODY_CHECKER
+    u8 objectCountInScenario;
+    for (int i = 0; i < MAXBODYSINSCENARIO; i++)
+    {
+        if (BodysLoaded[i] == NULL) continue;
+        printf("X: %f\n", BodysLoaded[i]->x);
+        printf("Y: %f\n", BodysLoaded[i]->y);
+        printf("X vel: %f\n", BodysLoaded[i]->vx);
+        printf("Y vel: %f\n", BodysLoaded[i]->vy);
+        printf("Radius: %f\n", BodysLoaded[i]->radius);
+        printf("Mass: %f\n", BodysLoaded[i]->mass);
+        printf("Red: %d\n", (int)BodysLoaded[i]->ColorRed);
+        printf("Green: %d\n", (int)BodysLoaded[i]->ColorGreen);
+        printf("Blue: %d\n",(int) BodysLoaded[i]->ColorBlue);
+        printf("Alpha: %d\n", (int)BodysLoaded[i]->AlphaChannel);
+        printf("Bitfield settings: %d\n", (int)BodysLoaded[i]->Bitfield);
+        objectCountInScenario++;
+    }
+    printf("object count: %d\n", objectCountInScenario);
+    #endif
 
     u32 fpsTimer = SDL_GetTicks();
     while (executingSimulation)
