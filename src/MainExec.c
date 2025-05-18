@@ -1,6 +1,9 @@
 // For loading with saves, compile with parameter = -D SAVE_LOADER
 // For checking data, compile with parameter = -D BODY_CHECKER
+// To check current FPS in terminal, compile with parameter = -D TSHOW_FPS
+#ifdef _WIN32
 #define SDL_MAIN_HANDLED
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -27,8 +30,10 @@ int main(int argc, char** argv)
     float cameraPosY = 0;
     u8 FPS = 60;
     double desiredDelta = 1000 / FPS;
+    #ifdef TSHOW_FPS 
     u8 frameCount = 0;
     float realFPS = 0.0f;
+    #endif
     bool executingSimulation = true;
     bool load_custom_save = false;
     cbody_t* BodysLoaded[MAXBODYSINSCENARIO] = {NULL};
@@ -93,10 +98,6 @@ int main(int argc, char** argv)
             {
                 executingSimulation = false;
             }
-            if (EventHandler.type == SDL_KEYDOWN)
-            {
-                
-            }
         }
         // Rendering
         SDL_SetRenderDrawBlendMode(MainRenderer, SDL_BLENDMODE_BLEND);
@@ -110,6 +111,7 @@ int main(int argc, char** argv)
             float ViewportY = BodysLoaded[i]->y + cameraPosY;
             RenderCircle(MainRenderer, (i32)ViewportX, (i32)ViewportY, BodysLoaded[i]->radius);
         }
+        // Drawing FPS Counter
         SDL_SetRenderDrawColor(MainRenderer, 0x00, 0x00, 0x00, 0x80);
 
         SDL_RenderPresent(MainRenderer);
@@ -138,6 +140,7 @@ int main(int argc, char** argv)
         // Apply gravity
         ApplyGravity(BodysLoaded, (u16)MAXBODYSINSCENARIO);
 
+        #ifdef TSHOW_FPS
         frameCount++;
         if (SDL_GetTicks() - fpsTimer >= 1000)
         {
@@ -146,6 +149,7 @@ int main(int argc, char** argv)
             fpsTimer = SDL_GetTicks();
             printf("\rFPS: %.1f", realFPS);
         }
+        #endif
 
         u32 frameTime = SDL_GetTicks() - frameStart;
         if (frameTime < desiredDelta)
@@ -163,5 +167,8 @@ int main(int argc, char** argv)
     SDL_DestroyRenderer(MainRenderer);
     SDL_DestroyWindow(MainWindow);
     SDL_Quit();
+    #ifndef _WIN32
+    putc('\n', stdout);
+    #endif
     return 0;
 }

@@ -1,5 +1,8 @@
 #include "headers/ApplyGravity.h"
 #include <math.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 #define REALG 6.67430e-11f
 #define SIMULATEDG 6.67430e-2f

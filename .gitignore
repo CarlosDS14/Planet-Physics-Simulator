@@ -8,4 +8,6 @@ SDL2/
 *.txt
 *.exe
 *.bat
+*.sh
+*.run
 SaveExample.c
