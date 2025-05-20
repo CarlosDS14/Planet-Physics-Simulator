@@ -1,4 +1,4 @@
-#include "headers/CircleRender.h"
+#include "headers/GeometryRender.h"
 #include <math.h>
 
 void RenderCircle(SDL_Renderer* renderer, int x, int y, float radius)
