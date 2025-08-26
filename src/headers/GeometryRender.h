@@ -5,5 +5,6 @@
 #include <SDL2/SDL.h>
 
 void RenderCircle(SDL_Renderer* renderer, int x, int y, float radius);
+void RenderRectangle(SDL_Renderer* renderer, int x, int y, int w, int h);
 
 #endif // CIRCLERENDER_H

@@ -1,8 +1,10 @@
+// TODO: Fix bugs and optimize the save/load system
 #include <stdio.h>
 #include <stdlib.h>
 #include "headers/LoadSave.h"
+#include "headers/MemoryAlloc.h"
 
-int load_bodies(cbody_t** BodysLoaded, const u16 SizeOfArray, const char* filename)
+int load_bodies(cbody_t** BodysLoaded, const u16 SizeOfArray, const char* filename, const u8 FileVersionRequired)
 {
     // Metadata of file
     const char* FileSignature = "PPSSAV";
@@ -36,8 +38,9 @@ int load_bodies(cbody_t** BodysLoaded, const u16 SizeOfArray, const char* filena
 
     for (u16 i = 0; i < ObjectsSaved; i++)
     {
+
         // Allocate memory for the bodies
-        BodysLoaded[i] = malloc(sizeof(cbody_t));
+        BodysLoaded[i] = TrackMalloc(sizeof(cbody_t));
         // Get X pos
         fseek(SaveFile, ByteCounter, SEEK_SET);
         fread(&BodysLoaded[i]->x, sizeof(float), 1, SaveFile);
@@ -93,13 +96,48 @@ int load_bodies(cbody_t** BodysLoaded, const u16 SizeOfArray, const char* filena
     return 0;
 }
 
+cbody_t* LoadBody(FILE* file, int locateddatapos)
+{
+    // Allocate memory for body
+    //cbody_t* body = MallocCBody(0, 0, 0, 0, 0, 0, 0x00, 0x00, 0x00, 0x00, 0b00000000); // Init all with zeros
+    cbody_t* body = TrackMalloc(sizeof(cbody_t));
+    body->x = 0;
+    body->y = 0;
+    body->vx = 0;
+    body->vy = 0;
+    body->radius = 0;
+    body->mass = 0;
+    body->ColorRed = 0x00;
+    body->ColorGreen = 0x00;
+    body->ColorBlue = 0x00;
+    body->AlphaChannel = 0x00;
+    body->Bitfield = 0b00000000; 
+    // Set byteoffset
+    int byteoffset = 0;
+    // Locate the first bytes
+    fseek(file, locateddatapos, SEEK_SET);
+    fread(&body->x, sizeof(float), 1, file);
+    byteoffset += 4;
+    fseek(file, locateddatapos + byteoffset, SEEK_SET);
+    fread(&body->y, sizeof(float), 1, file);
+    byteoffset += 4;
+    fseek(file, locateddatapos + byteoffset, SEEK_SET);
+    fread(&body->vx, sizeof(float), 1, file);
+    byteoffset += 4;
+    fseek(file, locateddatapos + byteoffset, SEEK_SET);
+    fread(&body->vy, sizeof(float), 1, file);
+    byteoffset += 4;
+    // NOT FINISHED
+    return NULL;
+}
+
 void default_bodies(cbody_t** BodysLoaded)
 {
     // Test bodies
-    BodysLoaded[0] = malloc(sizeof(cbody_t));
-    BodysLoaded[1] = malloc(sizeof(cbody_t));
-    BodysLoaded[2] = malloc(sizeof(cbody_t));
-    BodysLoaded[3] = malloc(sizeof(cbody_t));
+    BodysLoaded[0] = TrackMalloc(sizeof(cbody_t));
+    BodysLoaded[1] = TrackMalloc(sizeof(cbody_t));
+    BodysLoaded[2] = TrackMalloc(sizeof(cbody_t));
+    BodysLoaded[3] = TrackMalloc(sizeof(cbody_t));
 
     BodysLoaded[0]->x = 500;                       // Position X and Y
     BodysLoaded[0]->y = 310;

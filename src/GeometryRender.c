@@ -12,3 +12,9 @@ void RenderCircle(SDL_Renderer* renderer, int x, int y, float radius)
         SDL_RenderDrawLine(renderer, center.x - dx, center.y + y, center.x + dx, center.y + y);
     }
 }
+
+void RenderRectangle(SDL_Renderer* renderer, int x, int y, int w, int h)
+{
+    SDL_Rect tempRect = {x, y, w, h};
+    SDL_RenderFillRect(renderer, &tempRect);
+}

@@ -1,5 +1,5 @@
 #ifndef INTTYPES_H
-#define INTTYPES_h
+#define INTTYPES_H
 #include <stdint.h>
 
 #define u8 uint8_t

@@ -3,11 +3,12 @@ src/old/
 saves/
 asset/
 SDL2/
+Versions/
 *.dll
 *.sav
 *.txt
 *.exe
 *.bat
 *.sh
-*.run
 SaveExample.c
+PlanetTester

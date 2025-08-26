@@ -1,4 +1,5 @@
 #include "headers/ApplyGravity.h"
+#include "headers/define.h"
 #include <math.h>
 #ifndef _WIN32
 #include <unistd.h>
@@ -7,13 +8,13 @@
 #define REALG 6.67430e-11f
 #define SIMULATEDG 6.67430e-2f
 
-void ApplyGravity(cbody_t** BodysLoaded, const u16 SizeOfArray)
+void ApplyGravity(cbody_t** BodysLoaded)
 {
-    for (int i = 0; i < SizeOfArray; i++) // Seleccionar ObjetoA
+    for (int i = 0; i < MAXBODYSINSCENARIO; i++) // Seleccionar ObjetoA
     {
         if (BodysLoaded[i] == NULL) continue; // Si la memoria no apunta a nada, ignorar
         cbody_t* ObjectA = BodysLoaded[i]; // Si la memoria apunta a un cuerpo, guardar el puntero en una variable
-        for (int j = 0; j < SizeOfArray; j++) // Seleccionar ObjetoB
+        for (int j = 0; j < MAXBODYSINSCENARIO; j++) // Seleccionar ObjetoB
         {
             if (BodysLoaded[j] == NULL) continue; // Si la memoria no apunta a nada, ignorar
             if (BodysLoaded[j] == BodysLoaded[i]) continue; // Si la direccion de memoria de ObjetoB apunta a ObjetoA, ignorar
@@ -26,8 +27,16 @@ void ApplyGravity(cbody_t** BodysLoaded, const u16 SizeOfArray)
             float force = SIMULATEDG * ObjectA->mass * ObjectB->mass / distSqr; // Calcular fuerza aplicada por el ObjetoB hacia ObjetoA
             float fx = force * dx / dist; // Aplicar aceleración en eje X e Y
             float fy = force * dy / dist;
-            ObjectA->vx += fx / ObjectA->mass; // Sumar las fuerzas finales con la velocidad final
-            ObjectA->vy += fy / ObjectA->mass;
+            ObjectA->vx += (fx / ObjectA->mass) * 60; // Sumar las fuerzas finales con la velocidad final
+            ObjectA->vy += (fy / ObjectA->mass) * 60;
         }
+    }
+}
+
+void ApplyLensEffect(cbody_t** BodysLoaded, Photon_t** Photons)
+{
+    for (int i = 0; i < MAXBODYSINSCENARIO; i++)
+    {
+
     }
 }
