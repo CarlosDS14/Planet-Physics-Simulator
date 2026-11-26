@@ -5,7 +5,7 @@ SOURCE_FILES= src/MainExec.c src/LoadSave.c src/GeometryRender.c src/ApplyGravit
 DEPENDENCIES = # Empty
 INCLUDES = # Empty
 
-LINK_LIBS = -lSDL2 -lSDL2ttf
+LINK_LIBS = -lSDL2 -lSDL2_image -lSDL2_ttf
 
 EXECNAME = PanetTester
 
