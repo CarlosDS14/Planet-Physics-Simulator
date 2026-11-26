@@ -4,7 +4,10 @@ saves/
 asset/
 SDL2/
 Versions/
+cache/
+glad/
 *.dll
+*.so
 *.sav
 *.txt
 *.exe
@@ -12,3 +15,4 @@ Versions/
 *.sh
 SaveExample.c
 PlanetTester
+CPPS

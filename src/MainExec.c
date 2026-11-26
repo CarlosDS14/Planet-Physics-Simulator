@@ -15,19 +15,19 @@
 #include "headers/LoadSave.h"
 #include "headers/MemoryAlloc.h"
 #include "headers/define.h"
+#include "../glad/include/glad/glad.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
 
-#ifdef PLEASEDONOTTOUCHDISPLZ
 #ifdef _WIN32
 #include <windows.h>
 #elif __linux__
 #include <unistd.h>
 #include <limits.h>
+#include <threads.h>
 #else
 #error "Unknown OS to compile"
-#endif
 #endif
 
 /*
@@ -47,6 +47,7 @@ int main(int argc, char** argv)
     // Window
     SDL_Window* MainWindow = NULL;
     SDL_Renderer* MainRenderer = NULL;
+    SDL_GLContext* OpenGL_Context = NULL; // Not used yet
     SDL_Event EventHandler;
     u16 windowSize[] = {800, 620}; // {width, height} original = 800, 620
     #ifdef SAVE_LOADER
@@ -64,65 +65,67 @@ int main(int argc, char** argv)
     #ifndef BUILD_WITHOUT_COLLITION
     bool disable_collition = false;
     #endif
-    bool put_default_planets = false;
-    bool pause_physics = true;
-    bool vsync = false;
+    bool put_default_planets = false; // This sets the default planets
+    bool pause_physics = true; // User fuctionality, pauses movement and simulation
+    bool vsync = false; // IDK where to use it | (EDIT IN SEPTEMBER 6 OF 2025): Now i can use this for OpenGL Context
     bool fatal_error = false;
+    bool force_pause_physics = false; // Used for focus dialogs or error msg
     cbody_t* BodysLoaded[MAXBODYSINSCENARIO] = {NULL};
     GUI_t* UILoaded[MAXUICOUNTALLOWED] = {NULL};
     // TTF_Pair* FontsLoaded[MAXFONTSLOADED] = {NULL};
 
     // Flags that can be set 
-    if (argc >= 2)
+    if (argc > 1)
     {
         for (int i = 2; i < argc; i++)
         {
             #ifndef BUILD_WITHOUT_COLLITION
             if (!strcmp(argv[i], "--disable-collition")) disable_collition = true;
             #endif // BUILD_WITHOUT_COLLITION
-            if (!strcmp(argv[i], "--set-default-planets")) put_default_planets = true;
+            if (!strcmp(argv[i], "--set-default-planets"))
+            {
+                put_default_planets = true;
+                load_custom_save = false;
+            }
 
         }
     }
 
+    char title[256] = {0};
+    snprintf(title, sizeof(title), pause_physics ? PAUSEDTITLE : DEFAULTTITLE);
+
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
     {
         printf("error: failed to init video\n");
-        return 1;
+        exit(1);
     }
-    if (IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) != (IMG_INIT_JPG | IMG_INIT_PNG))
+    if (IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) == 0)
     {
         printf("error: failed to init img formats");
-        SDL_Quit();
-        return 1;
+        exit(1);
     }
 
     if (TTF_Init() != 0)
     {
         printf("error: failed to init ttf\n");
-        IMG_Quit();
-        SDL_Quit();
-        return 1;
+        exit(1);
     }
-    MainWindow = SDL_CreateWindow(pause_physics ? PAUSEDTITLE : DEFAULTTITLE, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowSize[0], windowSize[1], SDL_WINDOW_SHOWN);
+
+    MainWindow = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowSize[0], windowSize[1], SDL_WINDOW_SHOWN);
     if (!MainWindow)
     {
         printf("error: failed to create window\n");
-        TTF_Quit();
-        IMG_Quit();
-        SDL_Quit();
-        return 1;
+        exit(1);
     }
+    
     MainRenderer = SDL_CreateRenderer(MainWindow, -1, SDL_RENDERER_ACCELERATED);
     if (!MainRenderer)
     {
         printf("error: failed to generate renderer\n");
         SDL_DestroyWindow(MainWindow);
-        TTF_Quit();
-        IMG_Quit();
-        SDL_Quit();
-        return 1;
+        exit(1);
     }
+
     #ifdef SAVE_LOADER
     load_bodies(BodysLoaded, MAXBODYSINSCENARIO, "saves/PPSSavetest.sav", FileVersionRequired);
     load_custom_save = true;
@@ -171,7 +174,7 @@ int main(int argc, char** argv)
     UILoaded[0]->w = 17;
     UILoaded[0]->h = 18;
     SDL_Surface* scene_control_buttons = IMG_Load("asset/scene_control_buttons.png");
-    UILoaded[0]->Texture = SDL_CreateTextureFromSurface(MainRenderer, scene_control_buttons);
+    UILoaded[0]->Texture = SDL_CreateTextureFromSurface(MainRenderer, scene_control_buttons); // Basically this cannot be used (for the moment) with OpenGL
     SDL_FreeSurface(scene_control_buttons);
 
     while (executingSimulation)
@@ -189,7 +192,7 @@ int main(int argc, char** argv)
             }
             if (EventHandler.type == SDL_KEYDOWN)
             {
-                if (EventHandler.key.keysym.sym == SDLK_ESCAPE && !EventHandler.key.repeat)
+                if ((EventHandler.key.keysym.sym == SDLK_ESCAPE && !EventHandler.key.repeat) && !force_pause_physics)
                 {
                     pause_physics = !pause_physics;
                     pause_physics == true ? SDL_SetWindowTitle(MainWindow, PAUSEDTITLE) : SDL_SetWindowTitle(MainWindow, DEFAULTTITLE);
@@ -199,7 +202,7 @@ int main(int argc, char** argv)
                     PlanetTypeSelector++;
                     if (PlanetTypeSelector >= AMOUNTPRECREATEDBODIES) PlanetTypeSelector = 0;
                 }
-                if (EventHandler.key.keysym.sym == SDLK_r && !EventHandler.key.repeat)
+                if ((EventHandler.key.keysym.sym == SDLK_r && !EventHandler.key.repeat) && !force_pause_physics)
                 {
                     printf("Reseting scenario...\n");
                     for (int i = 0; i < MAXBODYSINSCENARIO; i++)
@@ -210,7 +213,7 @@ int main(int argc, char** argv)
                         BodysLoaded[i] = NULL;
                     }
                 }
-                if (EventHandler.key.keysym.sym == SDLK_c && !EventHandler.key.repeat)
+                if ((EventHandler.key.keysym.sym == SDLK_c && !EventHandler.key.repeat) && !force_pause_physics)
                 {
                     // TODO: Make a create keybind, that create bodies with specific parameters, but with customized position
                     bool bodyCreated = false;
@@ -240,6 +243,28 @@ int main(int argc, char** argv)
                     if (bodyCreated == false) printf("error: cannot create anymore objects\n");
                 }
             }
+            if (EventHandler.type == SDL_MOUSEBUTTONDOWN)
+            {
+                SDL_GetMouseState(&cursorX, &cursorY);
+                if (EventHandler.button.button == SDL_BUTTON_LEFT)
+                {
+                    if (!force_pause_physics)
+                    {
+                        for (int i = 0; i < MAXBODYSINSCENARIO; i++)
+                        {
+                            if (BodysLoaded[i] == NULL) continue;
+                            float dx = BodysLoaded[i]->x - cursorX;
+                            float dy = BodysLoaded[i]->y - cursorY;
+                            if ((dx * dx + dy * dy) <= (BodysLoaded[i]->radius * BodysLoaded[i]->radius))
+                            {
+                                BodysLoaded[i]->Bitfield |= 0b00000100; // Select it
+                                break;
+                            }
+                            else BodysLoaded[i]->Bitfield &= 0b11111011; // Unselect it
+                        }
+                    }
+                }
+            }
         }
         // Rendering
 
@@ -255,14 +280,16 @@ int main(int argc, char** argv)
             float ViewportX = BodysLoaded[i]->x + cameraPosX;
             float ViewportY = BodysLoaded[i]->y + cameraPosY;
             // Highlight
-            SDL_SetRenderDrawColor(MainRenderer, 0xff, 0xff, 0xff, 0xff); // #FFFFFF
-            RenderCircle(MainRenderer, (i32)ViewportX, (i32)ViewportY, BodysLoaded[i]->radius + 2);
+            if (BodysLoaded[i]->Bitfield & 0x04) // Selected
+            {
+                SDL_SetRenderDrawColor(MainRenderer, 0xff, 0xff, 0xff, 0xff); // #FFFFFF
+                RenderCircle(MainRenderer, (i32)ViewportX, (i32)ViewportY, BodysLoaded[i]->radius + 2);
+            }
             // Planet
             SDL_SetRenderDrawColor(MainRenderer, BodysLoaded[i]->ColorRed, BodysLoaded[i]->ColorGreen, BodysLoaded[i]->ColorBlue, BodysLoaded[i]->AlphaChannel);
             RenderCircle(MainRenderer, (i32)ViewportX, (i32)ViewportY, BodysLoaded[i]->radius);
         }
-        
-        // Render UI
+
         for (int i = 0; i < MAXUICOUNTALLOWED; i++)
         {
             if (UILoaded[i] == NULL) continue;
@@ -286,7 +313,7 @@ int main(int argc, char** argv)
                     BodysLoaded[i] = NULL;
                     continue;
                 }
-                else if (BodysLoaded[i]->y >= (windowSize[1] + 100) || BodysLoaded[i]->y <= -100)
+                else if (BodysLoaded[i]->y >= (windowSize[1] + 100 + BodysLoaded[i]->radius) || BodysLoaded[i]->y <= -100 - BodysLoaded[i]->radius)
                 {
                     printf("Body %d in scenario is out of bounds in Y axis, removing...\n", i);
                     TrackFree(BodysLoaded[i]);

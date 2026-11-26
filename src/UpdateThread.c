@@ -10,7 +10,7 @@ int UpdateThread(void* data)
     u32 updateDelay = 1000 / TARGET_UPS;
     u32 lastUpdate = SDL_GetTicks();
 
-    while (executingSimulation)
+    while (running)
     {
         
     }

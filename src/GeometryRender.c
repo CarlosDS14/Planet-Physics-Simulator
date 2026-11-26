@@ -13,6 +13,10 @@ void RenderCircle(SDL_Renderer* renderer, int x, int y, float radius)
     }
 }
 
+#ifdef OPENGL_RENDERER
+// Placeholder for future OpenGL rendering code
+#endif
+
 void RenderRectangle(SDL_Renderer* renderer, int x, int y, int w, int h)
 {
     SDL_Rect tempRect = {x, y, w, h};
